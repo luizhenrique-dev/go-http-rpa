@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/luizhenriquees/go-http-rpa/internal/usecase"
 )
 
@@ -15,5 +18,9 @@ func main() {
 		Headers:  headers,
 	}
 	uc := usecase.NewAnswerQuizRpa()
-	uc.Execute(quizInput)
+	err := uc.Execute(quizInput)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("RPA executed successfully")
 }
