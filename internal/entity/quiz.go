@@ -12,3 +12,7 @@ type QuizData struct {
 	QuestionCount int `json:"questions_count"`
 	Questions     []Question
 }
+
+type QuizList struct {
+	Quizzes []QuizData `json:"quiz"`
+}
