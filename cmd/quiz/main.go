@@ -11,7 +11,7 @@ func main() {
 
 	quizInput := usecase.QuizInput{
 		BaseUrl:  "https://<your-url>/",
-		QuizesId: []int{}, // Add your quiz ids here. Ex: []int{1, 2, 3}
+		QuizesId: []int{}, // Add your quiz ids here. Ex: []int{1, 2, 3}. If not provided it will fetch all available quizzes.
 		Headers:  headers,
 	}
 	uc := usecase.NewAnswerQuizRpa()
