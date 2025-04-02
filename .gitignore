@@ -1,0 +1,7 @@
+# JetBrains IDE
+.idea/
+
+go.work
+
+# Log files
+*.log
