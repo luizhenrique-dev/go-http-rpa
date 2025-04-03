@@ -1,5 +1,10 @@
 default: run-quiz-rpa
 
+.PHONY: install
+install:
+	@echo "==> Installing application dependencies..."
+	@go mod tidy
+
 .PHONY: run-quiz-rpa
 run-quiz-rpa:
 	@echo "==> Running Quiz RPA..."
