@@ -22,27 +22,28 @@ This approach offers a lightweight alternative to browser-based automation, usin
 git clone https://github.com/luizhenrique-dev/go-http-rpa.git
 cd go-http-rpa
 ```
+
 ### 2. Configure Your Target System
+
+#### Configure Environment Variables
+Create a `.env` file in the project root with the following variables:
+``` 
+WEBSITE_URL=https://<your-url>/
+WEBSITE_TOKEN=Bearer <your-token>
+```
+
 #### For Quiz Automation
 Edit `cmd/quiz/main.go` and update the following:
 ``` go
-headers["X-Authorization"] = "Bearer <your-token>"
-
 quizInput := usecase.QuizInput{
-    BaseUrl:  "https://<your-url>/",
     QuizesId: []int{}, // Add your quiz ids here. Ex: []int{1, 2, 3}
-    Headers:  headers,
 }
 ```
 #### For Course Automation
 Edit `cmd/course/main.go` and update the following:
 ``` go
-headers["X-Authorization"] = "Bearer <your-token>"
-
 courseInput := usecase.CourseInput{
-    BaseUrl:   "https://<your-url>/",
     CourseIDs: []int{}, // Add your course ids here. Ex: []int{1, 2, 3}
-    Headers:   headers,
 }
 ```
 ### 3. Run the Application
