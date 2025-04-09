@@ -1,4 +1,4 @@
-package usecase
+package rpa
 
 import (
 	"fmt"
