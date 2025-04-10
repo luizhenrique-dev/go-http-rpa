@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/luizhenriquees/go-http-rpa/internal/usecase"
+	"github.com/luizhenriquees/go-http-rpa/deprecated/usecase"
 )
 
 func main() {

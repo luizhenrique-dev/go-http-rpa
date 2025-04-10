@@ -1,11 +1,21 @@
-package http_request
+package httprequest
 
 import (
 	"bytes"
 	"net/http"
 )
 
-func DoGet(url string, headers map[string]string) (*http.Response, error) {
+type HTTPMethod string
+
+const (
+	GET  HTTPMethod = "GET"
+	POST HTTPMethod = "POST"
+)
+
+// Headers holds the headers for an HTTP request
+type Headers map[string]string
+
+func DoGet(url string, headers Headers) (*http.Response, error) {
 	client := &http.Client{}
 	req, err := prepareRequest(http.MethodGet, url, headers, nil)
 	if err != nil {
@@ -19,7 +29,7 @@ func DoGet(url string, headers map[string]string) (*http.Response, error) {
 	return resp, nil
 }
 
-func DoPost(url string, headers map[string]string, body []byte) (*http.Response, error) {
+func DoPost(url string, headers Headers, body []byte) (*http.Response, error) {
 	client := &http.Client{}
 	req, err := prepareRequest(http.MethodPost, url, headers, body)
 	if err != nil {
@@ -33,7 +43,7 @@ func DoPost(url string, headers map[string]string, body []byte) (*http.Response,
 	return resp, nil
 }
 
-func prepareRequest(method string, url string, headers map[string]string, body []byte) (*http.Request, error) {
+func prepareRequest(method string, url string, headers Headers, body []byte) (*http.Request, error) {
 	var req *http.Request
 	var err error
 	if method == http.MethodGet {

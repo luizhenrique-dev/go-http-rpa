@@ -1,4 +1,10 @@
-package entity
+package rpaquiz
+
+type QuizInput struct {
+	BaseUrl  string
+	QuizesId []int
+	Headers  map[string]string
+}
 
 type Question struct {
 	Question string   `json:"question"`

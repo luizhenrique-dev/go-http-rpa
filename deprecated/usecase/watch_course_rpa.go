@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/luizhenriquees/go-http-rpa/internal/entity"
-	"github.com/luizhenriquees/go-http-rpa/pkg/http_request"
+	httprequest "github.com/luizhenriquees/go-http-rpa/http_request"
+	"github.com/luizhenriquees/go-http-rpa/rpa_course"
 )
 
 const (
@@ -21,7 +21,8 @@ const (
 	taskTypeTest = "test"
 
 	// Task status
-	statusFinished = "finished"
+	statusFinished  = "finished"
+	DefaultWaitTime = 2 * time.Second
 )
 
 type CourseInput struct {
@@ -42,6 +43,7 @@ func WithWaitTime(duration time.Duration) WatchCourseOption {
 	}
 }
 
+// NewWatchCourseRpa this RPA is deprecated
 func NewWatchCourseRpa(opts ...WatchCourseOption) *WatchCourseRpa {
 	rpa := &WatchCourseRpa{
 		waitTime: DefaultWaitTime,
@@ -66,15 +68,15 @@ func (w *WatchCourseRpa) Execute(input CourseInput) error {
 	return nil
 }
 
-func (w *WatchCourseRpa) fetchCourseStatus(input *CourseInput) (*entity.CoursesList, error) {
+func (w *WatchCourseRpa) fetchCourseStatus(input *CourseInput) (*rpacourse.CoursesList, error) {
 	urlGetCourses := input.BaseUrl + statusPath
 	fmt.Println("GET to:", urlGetCourses)
-	resp, err := http_request.DoGet(urlGetCourses, input.Headers)
+	resp, err := httprequest.DoGet(urlGetCourses, input.Headers)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching courses list: %w", err)
 	}
 	defer resp.Body.Close()
-	var responseData entity.CoursesList
+	var responseData rpacourse.CoursesList
 	fmt.Println("Courses fetched, extracting data...")
 	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
 		return nil, fmt.Errorf("error decoding courses list: %w", err)
@@ -83,7 +85,7 @@ func (w *WatchCourseRpa) fetchCourseStatus(input *CourseInput) (*entity.CoursesL
 	return &responseData, nil
 }
 
-func (w *WatchCourseRpa) filterCoursesBasedOnInput(input CourseInput, courseList *entity.CoursesList) {
+func (w *WatchCourseRpa) filterCoursesBasedOnInput(input CourseInput, courseList *rpacourse.CoursesList) {
 	if len(input.CourseIDs) == 0 {
 		fmt.Println("No specific course ID provided. All available courses will be watched.")
 		return
@@ -93,7 +95,7 @@ func (w *WatchCourseRpa) filterCoursesBasedOnInput(input CourseInput, courseList
 	for _, id := range input.CourseIDs {
 		idMap[id] = true
 	}
-	var filteredCourses []entity.Course
+	var filteredCourses []rpacourse.Course
 	for _, course := range courseList.Courses {
 		if idMap[course.ID] {
 			filteredCourses = append(filteredCourses, course)
@@ -103,7 +105,7 @@ func (w *WatchCourseRpa) filterCoursesBasedOnInput(input CourseInput, courseList
 	fmt.Printf("%d courses remaining after filter...\n", len(courseList.Courses))
 }
 
-func (w *WatchCourseRpa) processCourse(input CourseInput, course entity.Course) error {
+func (w *WatchCourseRpa) processCourse(input CourseInput, course rpacourse.Course) error {
 	fmt.Printf("Watching Course ID: %d\n", course.ID)
 	for _, module := range course.Modules {
 		if err := w.processModule(input, course.ID, module); err != nil {
@@ -113,7 +115,7 @@ func (w *WatchCourseRpa) processCourse(input CourseInput, course entity.Course) 
 	return nil
 }
 
-func (w *WatchCourseRpa) processModule(input CourseInput, courseID int, module entity.Module) error {
+func (w *WatchCourseRpa) processModule(input CourseInput, courseID int, module rpacourse.Module) error {
 	fmt.Printf("Watching Module ID: %d\n", module.ID)
 	for _, task := range module.Tasks {
 		if task.Type == taskTypeExam {
@@ -129,7 +131,7 @@ func (w *WatchCourseRpa) processModule(input CourseInput, courseID int, module e
 	return nil
 }
 
-func (w *WatchCourseRpa) processTask(input CourseInput, courseID, moduleID int, task entity.Task) error {
+func (w *WatchCourseRpa) processTask(input CourseInput, courseID, moduleID int, task rpacourse.Task) error {
 	startedTask, err := w.startTask(input, courseID, moduleID, task)
 	if err != nil {
 		return err
@@ -144,19 +146,19 @@ func (w *WatchCourseRpa) processTask(input CourseInput, courseID, moduleID int, 
 	return w.finishTask(input, courseID, moduleID, task.ID, questionAnsweredBody)
 }
 
-func (w *WatchCourseRpa) isTaskATest(startedTask *entity.Task) bool {
+func (w *WatchCourseRpa) isTaskATest(startedTask *rpacourse.Task) bool {
 	return startedTask.Type == taskTypeTest && startedTask.QuestionCount == 1 && startedTask.Status != statusFinished
 }
 
-func (w *WatchCourseRpa) startTask(input CourseInput, courseID, moduleID int, task entity.Task) (*entity.Task, error) {
+func (w *WatchCourseRpa) startTask(input CourseInput, courseID, moduleID int, task rpacourse.Task) (*rpacourse.Task, error) {
 	urlStartTask := input.BaseUrl + taskPath + strconv.Itoa(task.ID) + "/start"
-	respStartTask, err := http_request.DoPost(urlStartTask, input.Headers, []byte(""))
+	respStartTask, err := httprequest.DoPost(urlStartTask, input.Headers, []byte(""))
 	if err != nil {
 		return nil, fmt.Errorf("error starting task %d: %w", task.ID, err)
 	}
 	defer respStartTask.Body.Close()
 	fmt.Printf("[Course %d] | [Module %d] - Task %d started!\n", courseID, moduleID, task.ID)
-	var startedTask entity.Task
+	var startedTask rpacourse.Task
 	if err := json.NewDecoder(respStartTask.Body).Decode(&startedTask); err != nil {
 		return nil, fmt.Errorf("error parsing started task: %w", err)
 	}
@@ -165,7 +167,7 @@ func (w *WatchCourseRpa) startTask(input CourseInput, courseID, moduleID int, ta
 
 func (w *WatchCourseRpa) finishTask(input CourseInput, courseID, moduleID, taskID int, answerBody []byte) error {
 	urlFinishTask := input.BaseUrl + taskPath + strconv.Itoa(taskID) + "/finish"
-	_, err := http_request.DoPost(urlFinishTask, input.Headers, answerBody)
+	_, err := httprequest.DoPost(urlFinishTask, input.Headers, answerBody)
 	if err != nil {
 		return fmt.Errorf("error finishing task %d: %w", taskID, err)
 	}
