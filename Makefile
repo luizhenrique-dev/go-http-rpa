@@ -1,4 +1,4 @@
-default: run-quiz-rpa
+default: run-rpa-quiz-dep
 
 .PHONY: install
 install:
@@ -6,11 +6,11 @@ install:
 	@go mod tidy
 
 .PHONY: run-quiz-rpa
-run-quiz-rpa:
-	@echo "==> Running Quiz RPA..."
-	@go run cmd/quiz/main.go
+run-rpa-quiz-dep:
+	@echo "==> Running the Deprecated Quiz RPA..."
+	@go run deprecated/cmd/quiz/main.go
 
 .PHONY: run-quiz-rpa
-run-course-rpa:
-	@echo "==> Running Course RPA..."
-	@go run cmd/course/main.go
+run-course-rpa-dep:
+	@echo "==> Running the Deprecated Course RPA..."
+	@go run deprecated/cmd/course/main.go
