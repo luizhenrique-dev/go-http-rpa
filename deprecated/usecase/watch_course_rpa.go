@@ -37,12 +37,6 @@ type WatchCourseRpa struct {
 
 type WatchCourseOption func(*WatchCourseRpa)
 
-func WithWaitTime(duration time.Duration) WatchCourseOption {
-	return func(w *WatchCourseRpa) {
-		w.waitTime = duration
-	}
-}
-
 // NewWatchCourseRpa this RPA is deprecated
 func NewWatchCourseRpa(opts ...WatchCourseOption) *WatchCourseRpa {
 	rpa := &WatchCourseRpa{
