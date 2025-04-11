@@ -9,12 +9,14 @@ type Logger interface {
 	Error(msg string, err error, args ...any)
 }
 
-type DefaultLogger struct{}
+type DefaultLogger struct {
+	prefix string
+}
 
 func (l *DefaultLogger) Info(msg string, args ...any) {
-	fmt.Printf(msg+"\n", args...)
+	fmt.Printf("["+l.prefix+"] "+msg+"\n", args...)
 }
 
 func (l *DefaultLogger) Error(msg string, err error, args ...any) {
-	fmt.Printf(msg+": %v\n", append(args, err)...)
+	fmt.Printf("ERROR: "+msg+": %v\n", append(args, err)...)
 }
