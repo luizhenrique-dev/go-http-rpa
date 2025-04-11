@@ -1,35 +1,35 @@
-package rpa
+package engine
 
 import (
 	"errors"
 	"fmt"
+
+	httprequest "github.com/luizhenriquees/go-http-rpa/http_request"
 )
 
-// Parameters holds the parameters for tasks
-type Parameters map[string]any
-
-// Task represents a single operation within a rpa
-type Task interface {
-	Execute(params Parameters) error
-	Validate(params Parameters) error
-	Name() string
-}
+const (
+	ParamBaseURL = "baseUrl"
+)
 
 // Rpa represents a complete workflow consisting of multiple tasks
 type Rpa struct {
-	tasks  []Task
-	params Parameters
-	logger Logger
-	name   string
+	tasks          []Task
+	params         Parameters
+	defaultHeaders httprequest.Headers
+	logger         Logger
+	name           string
+	baseURL        string
 }
 
 // NewRpa creates a new rpa with the given name
-func NewRpa(name string) *Rpa {
+func NewRpa(name, baseURL string, defaultHeaders httprequest.Headers) *Rpa {
 	return &Rpa{
-		name:   name,
-		tasks:  []Task{},
-		logger: &DefaultLogger{},
-		params: make(Parameters),
+		name:           name,
+		baseURL:        baseURL,
+		tasks:          []Task{},
+		logger:         &DefaultLogger{prefix: "RPA"},
+		defaultHeaders: defaultHeaders,
+		params:         make(Parameters),
 	}
 }
 
@@ -43,6 +43,10 @@ func (j *Rpa) AddTask(task Task) *Rpa {
 func (j *Rpa) SetParams(params Parameters) *Rpa {
 	j.params = params
 	return j
+}
+
+func (j *Rpa) GetParams() Parameters {
+	return j.params
 }
 
 // AddParam adds a single parameter to the rpa
@@ -62,47 +66,19 @@ func (j *Rpa) Execute() error {
 		taskName := task.Name()
 
 		j.logger.Info("Validating task: %s", taskName)
-		if err := task.Validate(j.params); err != nil {
+		if err := task.Validate(); err != nil {
 			j.logger.Error("Validation failed for task", err, "task", taskName)
 			return fmt.Errorf("validation failed for task %s: %w", taskName, err)
 		}
 
 		j.logger.Info("Executing task: %s", taskName)
-		if err := task.Execute(j.params); err != nil {
+		if err := task.Execute(); err != nil {
 			j.logger.Error("Task execution failed", err, "task", taskName)
 			return fmt.Errorf("execution failed for task %s: %w", taskName, err)
 		}
+		j.logger.Info("Finishing task: %s", taskName)
 	}
 
 	j.logger.Info("Rpa completed successfully: %s", j.name)
-	return nil
-}
-
-// BaseTask provides common functionality for tasks
-type BaseTask struct {
-	requiredParams []string
-	name           string
-}
-
-// NewBaseTask creates a new base task with the given name
-func NewBaseTask(name string, requiredParams ...string) BaseTask {
-	return BaseTask{
-		name:           name,
-		requiredParams: requiredParams,
-	}
-}
-
-// Name returns the name of the task
-func (b BaseTask) Name() string {
-	return b.name
-}
-
-// Validate checks if all required parameters exist
-func (b BaseTask) Validate(params Parameters) error {
-	for _, param := range b.requiredParams {
-		if _, exists := params[param]; !exists {
-			return errors.New("missing required parameter: " + param)
-		}
-	}
 	return nil
 }
