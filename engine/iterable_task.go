@@ -5,12 +5,18 @@ import (
 	"fmt"
 )
 
+// CurrentElement represents a key or identifier for the current element in a collection or operation.
+// CurrentIndex represents a key or identifier for the current index in a collection or operation.
 const (
 	CurrentElement = "currentElement"
 	CurrentIndex   = "currentIndex"
 )
 
-// IterableTask represents an iterable task, it fetches elements based on a key and iterates through them
+// IterableTask represents a task that iterates over a collection of elements performing operations.
+// It is a generic type parameterized by T, supporting various data types.
+// The task leverages an inner Task implementation, using provided parameters to iterate.
+// Elements are identified using a key and are fetched dynamically from the given parameters.
+// Current iteration context, such as element and index, is stored in parameters for each iteration.
 type IterableTask[T any] struct {
 	task        Task
 	elementsKey string
@@ -18,7 +24,8 @@ type IterableTask[T any] struct {
 	name        string
 }
 
-// NewIterableTask creates a new iterable HTTP task
+// NewIterableTask creates a new instance of IterableTask with a specified name, elementsKey, underlying task, and parameters.
+// It enables iteration over elements of type T, processing each using the provided task.
 func NewIterableTask[T any](name string, elementsKey string, task Task, params Parameters) *IterableTask[T] {
 	return &IterableTask[T]{
 		task,
@@ -28,7 +35,7 @@ func NewIterableTask[T any](name string, elementsKey string, task Task, params P
 	}
 }
 
-// Execute performs the HTTP request
+// Execute iterates over a list of elements, setting the current element and index, and executes the wrapped task for each item. Returns an error if the task execution fails.
 func (t *IterableTask[T]) Execute() error {
 	rawElements := t.params.Get(t.elementsKey)
 	elements, ok := rawElements.([]T)
@@ -45,6 +52,7 @@ func (t *IterableTask[T]) Execute() error {
 	return nil
 }
 
+// Validate checks if the IterableTask has a valid elementsKey and ensures the required parameter exists; returns an error if validation fails.
 func (t *IterableTask[T]) Validate() error {
 	if t.elementsKey == "" {
 		return errors.New("missing element key")
@@ -55,6 +63,7 @@ func (t *IterableTask[T]) Validate() error {
 	return nil
 }
 
+// Name returns the name of the IterableTask. It is typically used for identification or debugging purposes.
 func (t *IterableTask[T]) Name() string {
 	return t.name
 }
