@@ -17,12 +17,13 @@ const (
 type HTTPTask struct {
 	name           string
 	method         httprequest.HTTPMethod
-	headers        httprequest.Headers
+	Headers        httprequest.Headers
 	Params         Parameters
 	requiredParams []string
 	urlParam       string
 	bodyParam      string
 	waitTime       time.Duration
+	Logger         Logger
 	responseKey    string
 }
 
@@ -32,7 +33,7 @@ func (t *HTTPTask) Name() string {
 
 // Validate checks if all required parameters exist
 func (t *HTTPTask) Validate() error {
-	if t.headers == nil {
+	if t.Headers == nil {
 		return errors.New("missing headers")
 	}
 
@@ -49,9 +50,10 @@ func NewHTTPTask(name string, method httprequest.HTTPMethod, headers httprequest
 	task := &HTTPTask{
 		name:        name,
 		method:      method,
-		headers:     headers,
+		Headers:     headers,
 		Params:      params,
 		waitTime:    time.Second * 2,
+		Logger:      &DefaultLogger{prefix: fmt.Sprintf("HTTP Task - %s", name)},
 		responseKey: "response_" + name,
 	}
 
@@ -101,12 +103,13 @@ func WithResponseKey(key string) Option {
 
 // Execute performs the HTTP request
 func (t *HTTPTask) Execute() error {
+	t.Logger.Info("Initiating task...")
 	finalURL := t.BuildURL()
 	var resp *http.Response
 	var err error
 
 	if t.method == httprequest.GET {
-		resp, err = httprequest.DoGet(finalURL, t.headers)
+		resp, err = httprequest.DoGet(finalURL, t.Headers)
 	} else {
 		var body []byte
 		if t.bodyParam != "" {
@@ -114,7 +117,7 @@ func (t *HTTPTask) Execute() error {
 				body = bodyValue
 			}
 		}
-		resp, err = httprequest.DoPost(finalURL, t.headers, body)
+		resp, err = httprequest.DoPost(finalURL, t.Headers, body)
 	}
 
 	if err != nil {
@@ -124,6 +127,7 @@ func (t *HTTPTask) Execute() error {
 	if t.waitTime > 0 {
 		time.Sleep(t.waitTime)
 	}
+	t.Logger.Info("Task completed")
 	return nil
 }
 

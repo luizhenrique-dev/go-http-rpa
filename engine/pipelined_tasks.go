@@ -10,14 +10,16 @@ var (
 )
 
 type PipelinedTasks struct {
-	tasks []Task
-	name  string
+	tasks  []Task
+	name   string
+	Logger Logger
 }
 
 func NewPipelinedTasks(name string, tasks []Task) *PipelinedTasks {
 	return &PipelinedTasks{
-		name:  name,
-		tasks: tasks,
+		name:   name,
+		tasks:  tasks,
+		Logger: &DefaultLogger{prefix: fmt.Sprintf("Pipelined Task - %s", name)},
 	}
 }
 
@@ -33,11 +35,13 @@ func (p *PipelinedTasks) Validate() error {
 }
 
 func (p *PipelinedTasks) Execute() error {
+	p.Logger.Info("Executing pipelined tasks...")
 	for _, task := range p.tasks {
 		if err := task.Execute(); err != nil {
 			return fmt.Errorf("HTTP request failed in pipeline task '%s': %w", task.Name(), err)
 		}
 	}
+	p.Logger.Info("Finished pipelined tasks")
 	return nil
 }
 

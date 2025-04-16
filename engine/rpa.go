@@ -27,7 +27,7 @@ func NewRpa(name, baseURL string, defaultHeaders httprequest.Headers) *Rpa {
 		name:           name,
 		baseURL:        baseURL,
 		tasks:          []Task{},
-		logger:         &DefaultLogger{prefix: "RPA"},
+		logger:         &DefaultLogger{fmt.Sprintf("RPA - %s", name)},
 		defaultHeaders: defaultHeaders,
 		params:         make(Parameters),
 	}
@@ -61,24 +61,19 @@ func (j *Rpa) Execute() error {
 		return errors.New("rpa is nil")
 	}
 
-	j.logger.Info("Starting rpa: %s", j.name)
+	j.logger.Info("Starting RPA...")
 	for _, task := range j.tasks {
 		taskName := task.Name()
-
-		j.logger.Info("Validating task: %s", taskName)
 		if err := task.Validate(); err != nil {
 			j.logger.Error("Validation failed for task", err, "task", taskName)
 			return fmt.Errorf("validation failed for task %s: %w", taskName, err)
 		}
-
-		j.logger.Info("Executing task: %s", taskName)
 		if err := task.Execute(); err != nil {
 			j.logger.Error("Task execution failed", err, "task", taskName)
 			return fmt.Errorf("execution failed for task %s: %w", taskName, err)
 		}
-		j.logger.Info("Finishing task: %s", taskName)
 	}
 
-	j.logger.Info("Rpa completed successfully: %s", j.name)
+	j.logger.Info("RPA completed successfully")
 	return nil
 }

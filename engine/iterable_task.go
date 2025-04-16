@@ -22,6 +22,7 @@ type IterableTask[T any] struct {
 	elementsKey string
 	params      Parameters
 	name        string
+	Logger      Logger
 }
 
 // NewIterableTask creates a new instance of IterableTask with a specified name, elementsKey, underlying task, and parameters.
@@ -32,6 +33,7 @@ func NewIterableTask[T any](name string, elementsKey string, task Task, params P
 		elementsKey,
 		params,
 		name,
+		&DefaultLogger{prefix: fmt.Sprintf("Iterable Task - %s", name)},
 	}
 }
 
@@ -42,13 +44,16 @@ func (t *IterableTask[T]) Execute() error {
 	if !ok {
 		return fmt.Errorf("expected '%s' to be of type []T, but it was %T", t.elementsKey, rawElements)
 	}
+	t.Logger.Info("Initiating iterable task")
 	for index, element := range elements {
 		t.params.Put(CurrentElement, element)
 		t.params.Put(CurrentIndex, index)
+		t.Logger.Info("Executing task for element %s with index %d", element, index)
 		if err := t.task.Execute(); err != nil {
 			return fmt.Errorf("HTTP request failed in iterable task: %w", err)
 		}
 	}
+	t.Logger.Info("Finished iterable task")
 	return nil
 }
 
