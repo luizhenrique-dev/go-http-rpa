@@ -3,6 +3,7 @@ package rpaquiz
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/luizhenriquees/go-http-rpa/engine"
 	httprequest "github.com/luizhenriquees/go-http-rpa/http_request"
@@ -51,5 +52,6 @@ func doPostRequest(url string, headers map[string]string, body []byte) (*QuizDat
 	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
+	time.Sleep(DefaultWaitTime)
 	return &responseData, nil
 }

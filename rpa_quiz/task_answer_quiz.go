@@ -36,7 +36,7 @@ func (t *TaskAnswerQuiz) Execute() error {
 	for index, question := range quizData.Questions {
 		payload := t.createAnswerPayload(len(question.Options), index)
 
-		t.Logger.Info("Question: %s", question.Question)
+		t.Logger.Info("Question %d: %s", index, question.Question)
 		t.Logger.Info("Number of possible answers: %d", len(question.Options))
 		t.Logger.Info("Selected answer: %s", payload)
 		resp, err := doPostRequest(answerURL, t.Headers, []byte(payload))
