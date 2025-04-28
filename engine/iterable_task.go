@@ -46,8 +46,8 @@ func (t *IterableTask[T]) Execute() error {
 	}
 	t.Logger.Info("Initiating iterable task")
 	for index, element := range elements {
-		t.params.Put(CurrentElement, element)
-		t.params.Put(CurrentIndex, index)
+		t.params.Put(t.elementsKey+"_"+CurrentElement, element)
+		t.params.Put(t.elementsKey+"_"+CurrentIndex, index)
 		t.Logger.Info("Executing task for element %s with index %d", element, index)
 		if err := t.task.Execute(); err != nil {
 			return fmt.Errorf("HTTP request failed in iterable task: %w", err)

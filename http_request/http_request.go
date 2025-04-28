@@ -3,6 +3,7 @@ package httprequest
 import (
 	"bytes"
 	"net/http"
+	"time"
 )
 
 type HTTPMethod string
@@ -12,11 +13,13 @@ const (
 	POST HTTPMethod = "POST"
 )
 
-// Headers holds the headers for an HTTP request
+// Headers hold the headers for an HTTP request
 type Headers map[string]string
 
 func DoGet(url string, headers Headers) (*http.Response, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	req, err := prepareRequest(http.MethodGet, url, headers, nil)
 	if err != nil {
 		return nil, err
@@ -30,7 +33,9 @@ func DoGet(url string, headers Headers) (*http.Response, error) {
 }
 
 func DoPost(url string, headers Headers, body []byte) (*http.Response, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	req, err := prepareRequest(http.MethodPost, url, headers, body)
 	if err != nil {
 		return nil, err

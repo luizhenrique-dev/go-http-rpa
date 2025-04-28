@@ -5,18 +5,21 @@ import (
 )
 
 type Logger interface {
-	Info(msg string, args ...any)
-	Error(msg string, err error, args ...any)
+	Info(format string, args ...any)
+	Warn(format string, args ...any)
+	Error(format string, args ...any)
 }
 
 type DefaultLogger struct {
 	prefix string
 }
 
-func (l *DefaultLogger) Info(msg string, args ...any) {
-	fmt.Printf("["+l.prefix+"] "+msg+"\n", args...)
+func (l *DefaultLogger) Info(format string, args ...any) {
+	fmt.Printf("[%s] INFO: %s\n", l.prefix, fmt.Sprintf(format, args...))
 }
-
-func (l *DefaultLogger) Error(msg string, err error, args ...any) {
-	fmt.Printf("ERROR: "+msg+": %v\n", append(args, err)...)
+func (l *DefaultLogger) Warn(format string, args ...any) {
+	fmt.Printf("[%s] WARN: %s\n", l.prefix, fmt.Sprintf(format, args...))
+}
+func (l *DefaultLogger) Error(format string, args ...any) {
+	fmt.Printf("[%s] ERROR: %s\n", l.prefix, fmt.Sprintf(format, args...))
 }

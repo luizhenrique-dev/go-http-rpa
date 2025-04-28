@@ -1,6 +1,6 @@
 package engine
 
-// Parameters holds the parameters for tasks
+// Parameters hold the parameters for tasks
 type Parameters map[string]any
 
 func (params Parameters) Put(key string, value any) {
