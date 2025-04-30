@@ -35,10 +35,6 @@ func (t *HTTPTask) Name() string {
 
 // Validate checks if all required parameters exist
 func (t *HTTPTask) Validate() error {
-	if t.URL == "" {
-		return fmt.Errorf("task %q: missing URL", t.name)
-	}
-
 	if t.Headers == nil {
 		return errors.New("missing headers")
 	}
@@ -52,11 +48,10 @@ func (t *HTTPTask) Validate() error {
 }
 
 // NewHTTPTask creates a new HTTP task
-func NewHTTPTask(name string, method httprequest.HTTPMethod, url string, headers httprequest.Headers, params Parameters, options ...Option) *HTTPTask {
+func NewHTTPTask(name string, method httprequest.HTTPMethod, headers httprequest.Headers, params Parameters, options ...Option) *HTTPTask {
 	task := &HTTPTask{
 		name:           name,
 		method:         method,
-		URL:            url,
 		Headers:        headers,
 		Params:         params,
 		waitTime:       time.Second * 2,
