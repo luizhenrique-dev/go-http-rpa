@@ -65,11 +65,11 @@ func (j *Rpa) Execute() error {
 	for _, task := range j.tasks {
 		taskName := task.Name()
 		if err := task.Validate(); err != nil {
-			j.logger.Error("Validation failed for task", err, "task", taskName)
+			j.logger.Error("Validation failed for task %s - %v", taskName, err)
 			return fmt.Errorf("validation failed for task %s: %w", taskName, err)
 		}
 		if err := task.Execute(); err != nil {
-			j.logger.Error("Task execution failed", err, "task", taskName)
+			j.logger.Error("Task [%s] execution failed %v", taskName, err)
 			return fmt.Errorf("execution failed for task %s: %w", taskName, err)
 		}
 	}
