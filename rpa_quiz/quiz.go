@@ -17,6 +17,7 @@ type QuizData struct {
 	ID            int `json:"id"`
 	QuestionCount int `json:"questions_count"`
 	Questions     []Question
+	Status        quizStatus `json:"status"`
 }
 
 type QuizList struct {
