@@ -3,13 +3,20 @@ package rpaquiz
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/luizhenriquees/go-http-rpa/engine"
 	httprequest "github.com/luizhenriquees/go-http-rpa/http_request"
 )
+
+const (
+	fetchQuizPath string     = "api/quiz"
+	pending       quizStatus = "pending"
+)
+
+type quizStatus string
 
 // TaskFetchQuizzes is a task to fetch all available quizzes
 type TaskFetchQuizzes struct {
@@ -17,33 +24,51 @@ type TaskFetchQuizzes struct {
 }
 
 func NewTaskFetchQuizzes(headers httprequest.Headers, params engine.Parameters) *TaskFetchQuizzes {
-	return &TaskFetchQuizzes{
-		HTTPTask: engine.NewHTTPTask(
-			"fetch_quizzes",
-			httprequest.GET,
-			headers,
-			params,
-		),
-	}
+	task := &TaskFetchQuizzes{}
+	httpTask := engine.NewHTTPTask(
+		"fetch_quizzes",
+		httprequest.GET,
+		headers,
+		params,
+		engine.WithPreRequestFunc(task.preRequest),
+		engine.WithPostExtractFunc(task.postExtract),
+	)
+	task.HTTPTask = httpTask
+	return task
 }
 
-func (t *TaskFetchQuizzes) Execute() error {
-	quizIds := t.Params.Get("quizIds").([]string)
-	if len(quizIds) > 0 {
+func (t *TaskFetchQuizzes) preRequest() error {
+	baseURL := ""
+	if val, ok := t.Params.Get(engine.ParamBaseURL).(string); ok {
+		baseURL = val
+	}
+	fetchQuizURL := baseURL + fetchQuizPath
+	t.Logger.Info("pre-request built URL: %s", fetchQuizURL)
+	t.URL = fetchQuizURL
+	return nil
+}
+
+func (t *TaskFetchQuizzes) postExtract(resp *http.Response, _ *engine.HTTPTask) error {
+	t.Logger.Info("PostExtract used.")
+	defer resp.Body.Close()
+	maxPerExecution := t.Params.Get(maxPerExec).(int)
+	pendingQuizIds := t.Params.Get(quizIdsKey).([]string)
+	if len(pendingQuizIds) > 0 {
 		return nil
 	}
-	if err := t.HTTPTask.Execute(); err != nil {
-		return err
-	}
 	var quizList QuizList
-	if err := json.NewDecoder(t.Params["response_fetch_quizzes"].(io.Reader)).Decode(&quizList); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&quizList); err != nil {
 		return fmt.Errorf("failed to decode quiz list: %w", err)
 	}
 	for _, quiz := range quizList.Quizzes {
-		quizIds = append(quizIds, strconv.Itoa(quiz.ID))
+		if quiz.Status != pending {
+			continue
+		}
+		if len(pendingQuizIds) < maxPerExecution {
+			pendingQuizIds = append(pendingQuizIds, strconv.Itoa(quiz.ID))
+		}
 	}
-	// TODO check if necessary the put below
-	t.Params.Put("quizIds", quizIds)
-	log.Printf("Quizzes ID extracted: %v\n", quizIds)
+	t.Params.Put(quizIdsKey, pendingQuizIds)
+	log.Printf("Quiz IDs to do list: %v\n", pendingQuizIds)
 	return nil
 }
