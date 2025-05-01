@@ -18,6 +18,6 @@ func NewTaskProcessQuiz(headers httprequest.Headers, params engine.Parameters) *
 	}
 
 	pipeline.AddTask(NewTaskStartQuiz(headers, params))
-	pipeline.AddTask(NewTaskAnswerQuiz(headers, params))
+	pipeline.AddTask(NewTaskAnswerQuestions(headers, params))
 	return pipeline
 }
