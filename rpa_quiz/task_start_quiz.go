@@ -3,6 +3,7 @@ package rpaquiz
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/luizhenriquees/go-http-rpa/engine"
@@ -15,43 +16,43 @@ type TaskStartQuiz struct {
 }
 
 func NewTaskStartQuiz(headers httprequest.Headers, params engine.Parameters) *TaskStartQuiz {
-	return &TaskStartQuiz{
-		HTTPTask: engine.NewHTTPTask(
-			"start_quiz",
-			httprequest.POST,
-			headers,
-			params,
-		),
-	}
+	task := &TaskStartQuiz{}
+	httpTask := engine.NewHTTPTask(
+		"start_quiz",
+		httprequest.POST,
+		headers,
+		params,
+		engine.WithPreRequestFunc(task.preRequest),
+		engine.WithPostExtractFunc(task.postExtract),
+	)
+	task.HTTPTask = httpTask
+	return task
 }
 
-func (t *TaskStartQuiz) Execute() error {
-	baseURL := t.Params["baseUrl"].(string)
-	quizID := t.Params[engine.CurrentElement].(string)
-	startURL := baseURL + quizPath + quizID + "/start"
-
-	t.Logger.Info("Starting quiz: POST %s", startURL)
-	quizData, err := doPostRequest(startURL, t.Headers, nil)
-	if err != nil {
-		return err
+func (t *TaskStartQuiz) preRequest() error {
+	baseURL := ""
+	if val, ok := t.Params.Get(engine.ParamBaseURL).(string); ok {
+		baseURL = val
 	}
-	t.Logger.Info("Quiz started - ID: %d, Number of questions: %d", quizData.ID, quizData.QuestionCount)
-
-	// Store the quiz data for subsequent tasks
-	t.Params.Put("quizData", quizData)
+	quizID := ""
+	if val, ok := t.Params.Get(quizIdsKey + "_" + engine.CurrentElement).(string); ok {
+		quizID = val
+	}
+	startURL := baseURL + quizPath + quizID + "/start"
+	t.Logger.Info("pre-request built URL: %s", startURL)
+	t.URL = startURL
 	return nil
 }
 
-func doPostRequest(url string, headers map[string]string, body []byte) (*QuizData, error) {
-	resp, err := httprequest.DoPost(url, headers, body)
-	if err != nil {
-		return nil, fmt.Errorf("HTTP post request failed: %w", err)
-	}
+func (t *TaskStartQuiz) postExtract(resp *http.Response, _ *engine.HTTPTask) error {
+	t.Logger.Info("PostExtract used.")
 	defer resp.Body.Close()
-	var responseData QuizData
-	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+	var quizData QuizData
+	if err := json.NewDecoder(resp.Body).Decode(&quizData); err != nil {
+		return fmt.Errorf("failed to decode quiz data response: %w", err)
 	}
 	time.Sleep(DefaultWaitTime)
-	return &responseData, nil
+	t.Logger.Info("Quiz started - ID: %d, Number of questions: %d", quizData.ID, quizData.QuestionCount)
+	t.Params.Put(questionsKey, quizData.Questions)
+	return nil
 }
