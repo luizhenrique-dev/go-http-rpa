@@ -10,6 +10,7 @@ type Course struct {
 	ID        int      `json:"id"`
 	TaskCount int      `json:"tasks_count,omitempty"`
 	TaskDone  int      `json:"tasks_done,omitempty"`
+	Status    string   `json:"status"`
 	Modules   []Module `json:"modules"`
 }
 
@@ -25,11 +26,12 @@ func (m *Module) IsFinished() bool {
 }
 
 type Task struct {
-	ID            int                `json:"id"`
-	CourseID      int                `json:"course_id"`
-	ModuleID      int                `json:"module_id"`
-	Type          string             `json:"type"`
-	Status        string             `json:"status"`
-	QuestionCount int                `json:"questions_count,omitempty"`
-	Questions     []rpaquiz.Question `json:"questions"`
+	ID             int                `json:"id"`
+	Name           string             `json:"name"`
+	CourseID       int                `json:"course_id"`
+	ModuleID       int                `json:"module_id"`
+	Type           string             `json:"type"`
+	Status         string             `json:"status"`
+	QuestionsCount int                `json:"questions_count,omitempty"`
+	Questions      []rpaquiz.Question `json:"questions"`
 }
