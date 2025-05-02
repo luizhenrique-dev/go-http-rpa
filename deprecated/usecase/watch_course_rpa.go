@@ -49,54 +49,17 @@ func NewWatchCourseRpa(opts ...WatchCourseOption) *WatchCourseRpa {
 }
 
 func (w *WatchCourseRpa) Execute(input CourseInput) error {
-	courseList, err := w.fetchCourseStatus(&input)
+	courseList, err := fetchCourseStatus(&input)
 	if err != nil {
-		return fmt.Errorf("failed to fetch course status: %w", err)
+		return fmt.Errorf("failed to fetch courses status: %w", err)
 	}
-	w.filterCoursesBasedOnInput(input, courseList)
+	filterCoursesBasedOnInput(input, courseList)
 	for _, course := range courseList.Courses {
 		if err := w.processCourse(input, course); err != nil {
 			return fmt.Errorf("error processing course %d: %w", course.ID, err)
 		}
 	}
 	return nil
-}
-
-func (w *WatchCourseRpa) fetchCourseStatus(input *CourseInput) (*rpacourse.CoursesList, error) {
-	urlGetCourses := input.BaseUrl + statusPath
-	fmt.Println("GET to:", urlGetCourses)
-	resp, err := httprequest.DoGet(urlGetCourses, input.Headers)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching courses list: %w", err)
-	}
-	defer resp.Body.Close()
-	var responseData rpacourse.CoursesList
-	fmt.Println("Courses fetched, extracting data...")
-	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
-		return nil, fmt.Errorf("error decoding courses list: %w", err)
-	}
-	fmt.Printf("%d courses extracted...\n", len(responseData.Courses))
-	return &responseData, nil
-}
-
-func (w *WatchCourseRpa) filterCoursesBasedOnInput(input CourseInput, courseList *rpacourse.CoursesList) {
-	if len(input.CourseIDs) == 0 {
-		fmt.Println("No specific course ID provided. All available courses will be watched.")
-		return
-	}
-	fmt.Printf("Filtering course IDs: %v\n", input.CourseIDs)
-	idMap := make(map[int]bool)
-	for _, id := range input.CourseIDs {
-		idMap[id] = true
-	}
-	var filteredCourses []rpacourse.Course
-	for _, course := range courseList.Courses {
-		if idMap[course.ID] {
-			filteredCourses = append(filteredCourses, course)
-		}
-	}
-	courseList.Courses = filteredCourses
-	fmt.Printf("%d courses remaining after filter...\n", len(courseList.Courses))
 }
 
 func (w *WatchCourseRpa) processCourse(input CourseInput, course rpacourse.Course) error {
@@ -141,7 +104,7 @@ func (w *WatchCourseRpa) processTask(input CourseInput, courseID, moduleID int, 
 }
 
 func (w *WatchCourseRpa) isTaskATest(startedTask *rpacourse.Task) bool {
-	return startedTask.Type == taskTypeTest && startedTask.QuestionCount == 1 && startedTask.Status != statusFinished
+	return startedTask.Type == taskTypeTest && startedTask.QuestionsCount == 1 && startedTask.Status != statusFinished
 }
 
 func (w *WatchCourseRpa) startTask(input CourseInput, courseID, moduleID int, task rpacourse.Task) (*rpacourse.Task, error) {
@@ -175,4 +138,41 @@ func (w *WatchCourseRpa) buildCourseTestAnswer(optionsLength int) string {
 	randAnswerIndex := random.Intn(optionsLength)
 	fmt.Printf("Answer index chosen: %d\n", randAnswerIndex)
 	return fmt.Sprintf(`{"answers":[%d]}`, randAnswerIndex)
+}
+
+func fetchCourseStatus(input *CourseInput) (*rpacourse.CoursesList, error) {
+	urlGetCourses := input.BaseUrl + statusPath
+	fmt.Println("GET to:", urlGetCourses)
+	resp, err := httprequest.DoGet(urlGetCourses, input.Headers)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching courses list: %w", err)
+	}
+	defer resp.Body.Close()
+	var responseData rpacourse.CoursesList
+	fmt.Println("Courses fetched, extracting data...")
+	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
+		return nil, fmt.Errorf("error decoding courses list: %w", err)
+	}
+	fmt.Printf("%d courses extracted...\n", len(responseData.Courses))
+	return &responseData, nil
+}
+
+func filterCoursesBasedOnInput(input CourseInput, courseList *rpacourse.CoursesList) {
+	if len(input.CourseIDs) == 0 {
+		fmt.Println("No specific course ID provided. All available courses will be watched.")
+		return
+	}
+	fmt.Printf("Filtering course IDs: %v\n", input.CourseIDs)
+	idMap := make(map[int]bool)
+	for _, id := range input.CourseIDs {
+		idMap[id] = true
+	}
+	var filteredCourses []rpacourse.Course
+	for _, course := range courseList.Courses {
+		if idMap[course.ID] && course.Status != statusFinished {
+			filteredCourses = append(filteredCourses, course)
+		}
+	}
+	courseList.Courses = filteredCourses
+	fmt.Printf("%d courses remaining after filter...\n", len(courseList.Courses))
 }
