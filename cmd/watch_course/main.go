@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/luizhenriquees/go-http-rpa/deprecated/usecase"
+	"github.com/luizhenriquees/go-http-rpa/usecase"
 )
 
 func main() {
@@ -19,12 +19,12 @@ func main() {
 	headers["Content-Type"] = "application/json"
 	headers["X-Authorization"] = os.Getenv("WEBSITE_TOKEN")
 
-	quizInput := usecase.QuizInput{
-		BaseUrl:  os.Getenv("WEBSITE_URL"),
-		QuizesId: []int{}, // Add your quiz ids here. Ex: []int{1, 2, 3}. If not provided it will fetch all available quizzes.
-		Headers:  headers,
+	quizInput := usecase.CourseInput{
+		BaseUrl:   os.Getenv("WEBSITE_URL"),
+		CourseIDs: []int{}, // Add your course ids here. Ex: []int{1, 2, 3}. If not provided it will fetch all available.
+		Headers:   headers,
 	}
-	uc := usecase.NewAnswerQuizRpa()
+	uc := usecase.NewWatchCourseRpa()
 	err = uc.Execute(quizInput)
 	if err != nil {
 		log.Fatal(err)

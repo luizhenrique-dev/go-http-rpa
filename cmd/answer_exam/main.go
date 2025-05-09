@@ -7,7 +7,8 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/luizhenriquees/go-http-rpa/deprecated/usecase"
+	"github.com/luizhenriquees/go-http-rpa/ai/chatgpt"
+	"github.com/luizhenriquees/go-http-rpa/usecase"
 )
 
 func main() {
@@ -24,7 +25,9 @@ func main() {
 		CourseIDs: []int{}, // Add your course ids here. Ex: []int{1, 2, 3}. If not provided it will fetch all available.
 		Headers:   headers,
 	}
-	uc := usecase.NewWatchCourseRpa()
+
+	aiAssistant := chatgpt.NewAgent()
+	uc := usecase.NewAnswerExamRpa(aiAssistant)
 	err = uc.Execute(quizInput)
 	if err != nil {
 		log.Fatal(err)
