@@ -1,6 +1,4 @@
-package rpacourse
-
-import rpaquiz "github.com/luizhenriquees/go-http-rpa/rpa_quiz"
+package entity
 
 type CoursesList struct {
 	Courses []Course `json:"courses"`
@@ -26,12 +24,12 @@ func (m *Module) IsFinished() bool {
 }
 
 type Task struct {
-	ID             int                `json:"id"`
-	Name           string             `json:"name"`
-	CourseID       int                `json:"course_id"`
-	ModuleID       int                `json:"module_id"`
-	Type           string             `json:"type"`
-	Status         string             `json:"status"`
-	QuestionsCount int                `json:"questions_count,omitempty"`
-	Questions      []rpaquiz.Question `json:"questions"`
+	ID             int        `json:"id"`
+	Name           string     `json:"name"`
+	CourseID       int        `json:"course_id"`
+	ModuleID       int        `json:"module_id"`
+	Type           string     `json:"type"`
+	Status         string     `json:"status"`
+	QuestionsCount int        `json:"questions_count,omitempty"`
+	Questions      []Question `json:"questions"`
 }
