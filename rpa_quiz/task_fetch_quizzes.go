@@ -8,15 +8,14 @@ import (
 	"strconv"
 
 	"github.com/luizhenriquees/go-http-rpa/engine"
+	"github.com/luizhenriquees/go-http-rpa/entity"
 	httprequest "github.com/luizhenriquees/go-http-rpa/http_request"
 )
 
 const (
-	fetchQuizPath string     = "api/quiz"
-	pending       quizStatus = "pending"
+	fetchQuizPath string            = "api/quiz"
+	pending       entity.QuizStatus = "pending"
 )
-
-type quizStatus string
 
 // TaskFetchQuizzes is a task to fetch all available quizzes
 type TaskFetchQuizzes struct {
@@ -56,7 +55,7 @@ func (t *TaskFetchQuizzes) postExtract(resp *http.Response, _ *engine.HTTPTask) 
 	if len(pendingQuizIds) > 0 {
 		return nil
 	}
-	var quizList QuizList
+	var quizList entity.QuizList
 	if err := json.NewDecoder(resp.Body).Decode(&quizList); err != nil {
 		return fmt.Errorf("failed to decode quiz list: %w", err)
 	}

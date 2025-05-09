@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/luizhenriquees/go-http-rpa/engine"
+	"github.com/luizhenriquees/go-http-rpa/entity"
 	httprequest "github.com/luizhenriquees/go-http-rpa/http_request"
 )
 
@@ -47,7 +48,7 @@ func (t *TaskStartQuiz) preRequest() error {
 func (t *TaskStartQuiz) postExtract(resp *http.Response, _ *engine.HTTPTask) error {
 	t.Logger.Info("PostExtract used.")
 	defer resp.Body.Close()
-	var quizData QuizData
+	var quizData entity.QuizData
 	if err := json.NewDecoder(resp.Body).Decode(&quizData); err != nil {
 		return fmt.Errorf("failed to decode quiz data response: %w", err)
 	}

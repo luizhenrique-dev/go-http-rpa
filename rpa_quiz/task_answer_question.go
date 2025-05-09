@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/luizhenriquees/go-http-rpa/engine"
+	"github.com/luizhenriquees/go-http-rpa/entity"
 	httprequest "github.com/luizhenriquees/go-http-rpa/http_request"
 )
 
@@ -35,8 +36,8 @@ func (t *TaskAnswerQuestion) preRequest() error {
 	t.Logger.Info("pre-request built URL: %s", answerURL)
 	t.URL = answerURL
 
-	var currentQuestion Question
-	if val, ok := t.Params.Get(questionsKey + "_" + engine.CurrentElement).(Question); ok {
+	var currentQuestion entity.Question
+	if val, ok := t.Params.Get(questionsKey + "_" + engine.CurrentElement).(entity.Question); ok {
 		currentQuestion = val
 	}
 	index := 0
@@ -74,7 +75,7 @@ func (t *TaskAnswerQuestion) createAnswerPayload(optionsCount int, questionIndex
 func (t *TaskAnswerQuestion) postExtract(resp *http.Response, _ *engine.HTTPTask) error {
 	t.Logger.Info("PostExtract used.")
 	defer resp.Body.Close()
-	var responseData QuizData
+	var responseData entity.QuizData
 	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
